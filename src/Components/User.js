@@ -21,12 +21,55 @@ class User extends Component{
 
     }
     initialState = {
+        id:"",
         email: "",
         password: "",
         firstName:"",
         lastName:"",
         confirmPassword:""
     };
+    componentDidMount() {
+        //getting the id from the url
+        const userId = +this.props.match.params.id;
+        if(userId) {
+          //if id is present then we are editing the user
+            this.findUserById(userId);
+        }
+    }
+    findUserById = (userId) =>{
+        axios.get("http://localhost:8080/api/"+userId)
+            .then(response => {
+                this.setState({
+                    id: response.data.id,
+                    email: response.data.email,
+                    firstName: response.data.firstName,
+                    lastName: response.data.lastName,
+                    password: response.data.password,
+                    confirmPassword: response.data.confirmPassword
+                });
+            }).catch(error => {
+            console.log(error);
+        });
+    }
+    updateUser = (e) =>{
+        e.preventDefault()
+        const user = {
+            id: this.state.id,
+            email: this.state.email,
+            firstName: this.state.firstName,
+            lastName: this.state.lastName,
+            password: this.state.password,
+            confirmPassword: this.state.confirmPassword
+        };
+        axios.put("http://localhost:8080/api/edit/"+this.state.id, user)
+            .then(response => {
+                this.setState(this.initialState);
+                this.props.history.push("/UserList");
+            }).catch(error => {
+            console.log(error);
+        });
+    }
+
     resetUser = () => {
         this.setState(this.initialState);
     };
@@ -70,20 +113,25 @@ class User extends Component{
     nameChangeCP(event){
         this.setState({confirmPassword: event.target.value});
     }
+
+    userList = () =>{
+        return this.props.history.push('/UserList');
+    }
+
     render(){
         // const {email, password, firstName, lastName, confirmPassword} = this.state;
         return(
             <div>
 
                 <div style={{"display":this.state.show?"block":"none"}}>
-                    <MyToast children={ {show:this.state.show, message:"User created successfully"} }/>
+                    <MyToast children={ {show:this.state.show, message:"User created successfully",type:"success"} }/>
                 </div>
 
             <Card className={"border border-dark bg-dark text-white"}>
                 <Card.Header>
                     <h3>Add User</h3>
                 </Card.Header>
-                    <Form onReset={this.resetUser} onSubmit={this.submitUser} id={"AddUserId"}>
+                    <Form onReset={this.resetUser} onSubmit={this.state.id ? this.updateUser: this.submitUser} id={"AddUserId"}>
                         <Card.Body>
                         <Form.Group className="mb-3" controlId="formBasicEmail" >
                             <Form.Label>Email address</Form.Label>
@@ -124,6 +172,9 @@ class User extends Component{
                     <Card.Footer>
                         <Button variant="info" type="reset">
                             Reset
+                        </Button>{"  "}
+                        <Button variant="info" type="button" onClick={this.userList.bind()}>
+                            UserList
                         </Button>{"   "}
                         <Button variant="primary" type="submit">
                             Submit

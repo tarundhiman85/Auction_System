@@ -1,6 +1,8 @@
 import React, {Component} from "react";
 import {Button, ButtonGroup, Card, Table} from "react-bootstrap";
 import axios from "axios";
+import MyToast from "./MyToast";
+import {Link} from "react-router-dom";
 class UserList extends Component{
 
     constructor(props) {
@@ -22,8 +24,26 @@ class UserList extends Component{
                 console.log(error);
             })
     }
+    deleteUser = (userId) => {
+        axios.delete("http://localhost:8080/api/"+userId)
+            .then(response => {
+                this.setState({show: true});
+                setTimeout(() => {
+                    this.setState({show: false});
+                }, 1500);
+                this.findAllUsers();
+            })
+            .catch(function (error) {
+                this.setState({show: false});
+                console.log(error);
+            })
+    }
     render(){
         return(
+            <div>
+            <div style={{"display":this.state.show?"block":"none"}}>
+                <MyToast children={ {show:this.state.show, message:"User Deleted successfully",type:"danger"} }/>
+            </div>
             <Card className={"border border-dark bg-dark text-white"}>
                 <Card.Header>
                     <h3>User List</h3>
@@ -50,8 +70,9 @@ class UserList extends Component{
                                         <td>{user.lastName}</td>
                                         <td>
                                                 <ButtonGroup>
-                                                    <Button variant="primary">Edit</Button>
-                                                    <Button variant="danger">Delete</Button>
+                                                    <Link to={'/edit/'+user.id} className="btn btn-sm btn-outline-primary">EditUser</Link>
+
+                                                    <Button variant="danger" onClick={this.deleteUser.bind(this,user.id)}>Delete</Button>
                                                 </ButtonGroup>
                                         </td>
                                     </tr>
@@ -66,6 +87,7 @@ class UserList extends Component{
                     </Table>
                 </Card.Body>
             </Card>
+            </div>
         )
     }
 }
